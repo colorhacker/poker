@@ -15,7 +15,7 @@
 int supreme_qinglong(poker_deck *hand){
 	if((check_continuous(hand,NULL)==hand->overage) && 
 		(check_samesuits(hand,NULL)==hand->overage)){
-		return 108;
+		return 104;
 	}else{
 		return 0;
 	}
@@ -197,10 +197,6 @@ poker_deck *find_flush(poker_deck *hand,int cnt){
 	format_poker_deck(&cont,0);
 	format_poker_deck(&copy,cnt);
 	poker_deck_group(hand_group,hand);//分组数据
-	/*for(i=0;i < 4;i++){
-		printf("=> ");
-		poker_deck_print(&hand_group[i]);//打印牌组
-	}*/
 	for(i=0;i < 4;i++){
 		while (hand_group[i].overage){
 			count = check_continuous(&hand_group[i],&cont);
@@ -221,18 +217,20 @@ poker_deck *find_flush(poker_deck *hand,int cnt){
 //普通牌：相同点数扑克 查找出指定相同数目的牌
 poker_deck *find_samedigital(poker_deck *hand,int cnt){
 	poker_deck *find_deck = NULL;
-	poker_deck temp,copy;
-	int count;
+	poker_deck temp,cont,copy;
+	int n,count;
 	format_poker_deck(&temp,0);
+	format_poker_deck(&cont,0);
 	format_poker_deck(&copy,cnt);
 	memcpy(&temp,hand,sizeof(poker_deck));
 	poker_sort(&temp,poker_face_digital);//排序牌组
 	while (temp.overage){
-		count = check_samedigital(&temp,&copy);
+		count = check_samedigital(&temp,&cont);
 		temp.licenses += count;
 		temp.overage -=count;
-		//printf("find_samedigital :%d\n",count);
-		if(count == cnt){
+		for(n=0;n<=count-cnt;n++){
+			memcpy(copy.face,&cont.face[n],sizeof(int)*cnt);
+			copy.overage = cnt;
 			add_poker_deck(&find_deck,&copy);
 		}
 	}
@@ -293,20 +291,24 @@ int main(void){
 	poker_deck *deck_cards = malloc_poker_deck();//牌组卡
 	poker_deck *hand_cards = malloc_poker_deck();//手牌卡
 
-	
 	poker_init(deck_cards);//初始化牌组
-	//poker_shuffle(deck_cards);//洗牌
+	poker_shuffle(deck_cards);//洗牌
 	//♣J ♣Q ♣K ♥2 ♥3 ♥4 ♥5 ♥6 ♥7 ♦5 ♦6 ♠7 ♥9
-	poker_load(hand_cards,"♣2 ♥3 ♠4 ♦5 ♥6 ♥7 ♥8 ♥9 ♥10 ♥J ♥Q ♥K ♥A");//♣♥♠♦加载手牌
+	poker_load(hand_cards,"♣J ♣Q ♣K ♥2 ♥3 ♥4 ♥5 ♥6 ♥7 ♦5 ♦6 ♠7 ♥9");//♣♥♠♦加载手牌
 	//poker_licensing(hand_cards,deck_cards,poker_number/4);//发牌前N张
 	poker_sort(hand_cards,poker_face_digital);//排序牌组
 	//poker_deck_print(deck_cards);
 	poker_deck_print(hand_cards);//打印牌组
 	find_special_cards(hand_cards);//查找特殊牌
-	find_flush(hand_cards,5);//大于连续且同花的数据
+	
+	find_flush(hand_cards,5);//连续且同花的数据
 	find_samedigital(hand_cards,4);//查找相同点数的扑克牌组合
+	find_samedigital(hand_cards,3);//查找相同点数的扑克牌组合
+	find_samedigital(hand_cards,2);//查找相同点数的扑克牌组合
 	find_samesuits(hand_cards,5);//查找相同花色的扑克牌组合
 	find_continuous(hand_cards,5);//查找指定数量顺子的组合
+	
+	
 	//poker_delete_hand(deck_cards,hand_cards);
 	//poker_deck_print(deck_cards);
 
